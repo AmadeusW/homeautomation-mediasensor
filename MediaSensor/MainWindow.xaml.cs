@@ -21,10 +21,13 @@ namespace MediaSensor
     public partial class MainWindow : Window
     {
         private Sensor Sensor { get; }
+        private ApiEndpoint ApiEndpoint { get; }
+
         public MainWindow()
         {
             InitializeComponent();
-            Sensor = new Sensor();
+            this.Sensor = new Sensor();
+            ApiEndpoint = new ApiEndpoint("tbd", "tbd", this.Sensor);
             ConnectUiUpdates();
         }
 

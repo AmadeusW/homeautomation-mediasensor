@@ -4,8 +4,9 @@ using System.Timers;
 
 namespace MediaSensor
 {
-    // Thank you, Simon Mourier
-    // Source: https://stackoverflow.com/a/45483843/879243
+    /// <summary>
+    /// Reports current media state and raises event when media state changes.
+    /// </summary>
     internal class Sensor : IDisposable
     {
         internal MediaState CurrentState { get; private set; }
@@ -53,6 +54,11 @@ namespace MediaSensor
         }
     }
 
+    /// <summary>
+    /// Contains code which detects status of the media.
+    /// Source: https://stackoverflow.com/a/45483843/879243
+    /// Thank you, Simon Mourier
+    /// </summary>
     internal static class SensorCore
     {
         public static MediaState GetState()
