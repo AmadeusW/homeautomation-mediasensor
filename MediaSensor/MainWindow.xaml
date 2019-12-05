@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MediaSensor"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="MainWindow" Height="80" Width="120" StateChanged="Window_StateChanged">
+    <StackPanel Orientation="Vertical">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock>Status:</TextBlock>
+            <TextBlock x:Name="StatusText">Initializing</TextBlock>
+        </StackPanel>
+        <Button>Override</Button>
+    </StackPanel>
 </Window>
