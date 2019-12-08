@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,28 +13,40 @@ namespace MediaSensor
     /// </summary>
     internal class ApiEndpoint
     {
-        private string Url { get; }
-        private string Token { get; }
-        internal bool Active { get; set; }
+        private Sensor Sensor { get; }
+        public HttpClient Client { get; }
+        private string Url { get; set;  }
+        private string Token { get; set; }
         internal bool IsOverriding { get; private set; }
-
+        private bool IsInitialized { get; set; }
 
         private MediaState CurrentMediaState;
         private MediaState OverridingState;
 
-        internal ApiEndpoint(string url, string token, Sensor sensor)
+        internal ApiEndpoint(Sensor sensor)
         {
-            if (string.IsNullOrWhiteSpace(url))
-                throw new ArgumentNullException(nameof(url));
-            if (string.IsNullOrWhiteSpace(token))
-                throw new ArgumentNullException(nameof(token));
             if (sensor == null)
                 throw new ArgumentNullException(nameof(sensor));
 
-            this.Url = url;
-            this.Token = token;
-            this.Active = true;
-            sensor.StateChanged += Sensor_StateChanged;
+            this.Sensor = sensor;
+            this.Client = new HttpClient();
+        }
+
+        internal void Initialize(ConfigurationReader configuration)
+        {
+            if (!configuration.Initialized)
+                throw new InvalidOperationException("Configuration hasn't been initialized yet.");
+
+            if (string.IsNullOrWhiteSpace(configuration.Url))
+                throw new InvalidOperationException("Configuration contains invalid URL.");
+            if (string.IsNullOrWhiteSpace(configuration.Token))
+                throw new InvalidOperationException("Configuration contains invalid token.");
+
+            this.Url = configuration.Url;
+            this.Token = configuration.Token;
+            this.Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", this.Token);
+            this.IsInitialized = true;
+            this.Sensor.StateChanged += Sensor_StateChanged;
         }
 
         private void Sensor_StateChanged(object sender, SensorStateEventArgs e)
@@ -68,8 +81,11 @@ namespace MediaSensor
             }
         }
 
-        private void NotifyEndpoint(MediaState currentMediaState)
+        internal void NotifyEndpoint(MediaState currentMediaState)
         {
+            if (!this.IsInitialized)
+                throw new InvalidOperationException("API Endpoint must be initialized first.");
+
             string value = "";
             switch (currentMediaState)
             {
@@ -81,14 +97,31 @@ namespace MediaSensor
                     value = "stopped";
                     break;
             }
-            var payload = string.Format("{\"state\": \"{0}\"}", value);
+            /*
+            switch (this.IsOverriding, currentMediaState)
+            {
+                case (true, _):
+                    break;
+                case (false, MediaState.Playing):
+                case (false, MediaState.Standby):
+                    value = "playing";
+                    break;
+                case (false, MediaState.Stopped):
+                    value = "stopped";
+                    break;
+            }
+            */
+            var payload = String.Format(@"{{ ""state"": ""{0}"" }}", value);
 
-            var request = WebRequest.CreateHttp(this.Url);
-            request.Method = "POST";
-            request.Headers.Add(HttpRequestHeader.Authorization, this.Token);
-            request.ContentType = "application/json";
-            request.ContentLength = payload.Length;
-            var response = request.GetResponse();
+            var request = new HttpRequestMessage(HttpMethod.Post, this.Url);
+            var content = new StringContent(payload);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+            Task.Run(async () =>
+            {
+                var whatImSending = await content.ReadAsStringAsync();
+                var response = await Client.PostAsync(this.Url, content).ConfigureAwait(false);
+            });
         }
     }
 }

@@ -20,15 +20,37 @@ namespace MediaSensor
     /// </summary>
     public partial class MainWindow : Window
     {
+        internal ConfigurationReader Configuration { get; }
         private Sensor Sensor { get; }
         private ApiEndpoint ApiEndpoint { get; }
 
         public MainWindow()
         {
             InitializeComponent();
+            this.Configuration = new ConfigurationReader("mediasensor.yaml");
             this.Sensor = new Sensor();
-            ApiEndpoint = new ApiEndpoint("tbd", "tbd", this.Sensor);
-            ConnectUiUpdates();
+            ApiEndpoint = new ApiEndpoint(this.Sensor);
+            Task.Run(async () =>
+            {
+                try
+                {
+                    this.Configuration.Initialize();
+                    this.ApiEndpoint.Initialize(this.Configuration);
+                    ConnectUiUpdates();
+
+                    // Set initial UI and make initial request
+                    var currentState = this.Sensor.CurrentState;
+                    this.ApiEndpoint.NotifyEndpoint(currentState);
+                    await this.Dispatcher.BeginInvoke((Action)(() => { this.UpdateUi(currentState); }));
+
+                    // Now that everything is fine, let's start the regular updates from the sensor.
+                    this.Sensor.Start();
+                }
+                catch (Exception ex)
+                {
+                    await this.Dispatcher.BeginInvoke((Action)(() => { this.HandleException(ex); }));
+                }
+            });
         }
 
         private void Sensor_StateChanged(object sender, SensorStateEventArgs e)
@@ -51,6 +73,12 @@ namespace MediaSensor
                     this.StatusText.Text = "Playing";
                     break;
             }
+        }
+
+        private void HandleException(Exception ex)
+        {
+            this.StatusText.Text = ex.Message;
+            this.Sensor.Stop();
         }
 
         private void Window_StateChanged(object sender, EventArgs e)

@@ -15,9 +15,18 @@ namespace MediaSensor
 
         internal Sensor()
         {
-            Timer = new Timer(500);
-            Timer.Elapsed += OnTimerElapsed;
-            Timer.Start();
+            this.Timer = new Timer(500);
+            this.Timer.Elapsed += OnTimerElapsed;
+        }
+
+        internal void Start()
+        {
+            this.Timer.Start();
+        }
+
+        internal void Stop()
+        {
+            this.Timer.Stop();
         }
 
         public void Dispose()
