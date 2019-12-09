@@ -6,6 +6,12 @@ It reports updates to the [Home Assistant](https://www.home-assistant.io/) serve
 The purpose of this app is to automatically turn off the light when the media is playing,
 and turn the light on when the media is stopped.
 
+## Prerequisites
+
+* Home Assistant: https://www.home-assistant.io/
+* Windows 10
+* .NET Core 3.0 runtime: https://dotnet.microsoft.com/download/dotnet-core/3.0
+
 ## Sample code
 
 `mediasensor.yaml` in the same directory as the .exe
