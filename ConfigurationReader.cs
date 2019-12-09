@@ -32,9 +32,10 @@ namespace MediaSensor
             }
             else
             {
+                // Produce a sample configuration
                 File.WriteAllText(this.configurationFileName,
-@"url: 192.168.0.0:1234/api/name # URL of the API endpoint, starting with http://
-token: asdf # Home Assistant long term token
+@"url: http://host:8123/api/states/sensor.media # URL of the API endpoint. See https://developers.home-assistant.io/docs/en/external_api_rest.html
+token: InsertLongTermTokenHere # Home Assistant long term token
 ");
                 Initialized = false;
             }
