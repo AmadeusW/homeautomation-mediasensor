@@ -23,11 +23,12 @@ namespace MediaSensor
         internal ConfigurationReader Configuration { get; }
         private Sensor Sensor { get; }
         private ApiEndpoint ApiEndpoint { get; }
+        private const string configurationFileName = "mediasensor.yaml";
 
         public MainWindow()
         {
             InitializeComponent();
-            this.Configuration = new ConfigurationReader("mediasensor.yaml");
+            this.Configuration = new ConfigurationReader(configurationFileName);
             this.Sensor = new Sensor();
             ApiEndpoint = new ApiEndpoint(this.Sensor);
             Task.Run(async () =>
@@ -35,13 +36,22 @@ namespace MediaSensor
                 try
                 {
                     this.Configuration.Initialize();
+                    if (this.Configuration.Initialized == false)
+                    {
+                        // Configuration was just created. There is no point continuing.
+                        throw new InvalidOperationException($"Please update {configurationFileName}");
+                    }
                     this.ApiEndpoint.Initialize(this.Configuration);
                     ConnectUiUpdates();
 
                     // Set initial UI and make initial request
                     var currentState = this.Sensor.CurrentState;
                     this.ApiEndpoint.NotifyEndpoint(currentState);
-                    await this.Dispatcher.BeginInvoke((Action)(() => { this.UpdateUi(currentState); }));
+                    await this.Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        this.UpdateUi(currentState);
+                        this.OverrideButton.IsEnabled = true;
+                    }));
 
                     // Now that everything is fine, let's start the regular updates from the sensor.
                     this.Sensor.Start();
@@ -64,13 +74,13 @@ namespace MediaSensor
             switch (state)
             {
                 case MediaState.Stopped:
-                    this.StatusText.Text = "Stopped";
+                    this.StatusText.Text = "Media: Stopped";
                     break;
                 case MediaState.Standby:
-                    this.StatusText.Text = "Standby";
+                    this.StatusText.Text = "Media: Standby";
                     break;
                 case MediaState.Playing:
-                    this.StatusText.Text = "Playing";
+                    this.StatusText.Text = "Media: Playing";
                     break;
             }
         }
