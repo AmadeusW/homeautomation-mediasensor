@@ -81,10 +81,10 @@ namespace MediaSensor
             {
                 case (MediaState.Playing, _):
                 case (MediaState.Standby, _):
-                    value = "playing forced";
+                    value = "force playing";
                     break;
                 case (MediaState.Stopped, _):
-                    value = "stopped forced";
+                    value = "force stopped";
                     break;
                 case (null, MediaState.Playing):
                 case (null, MediaState.Standby):
