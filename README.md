@@ -1,17 +1,17 @@
 # Media Sensor for Home Automation
 
 This app monitors the status of the sound output on your PC.
-It reports updates to the Home Automation (hass) server.
+It reports updates to the [Home Assistant](https://www.home-assistant.io/) server.
 
 The purpose of this app is to automatically turn off the light when the media is playing,
 and turn the light on when the media is stopped.
 
 ## Sample code
 
-`mediasensor.yaml` in the same directory as the executable
+`mediasensor.yaml` in the same directory as the .exe
 
 ```yaml
-url: http://host:8123/api/states/sensor.tvroommedia # URL of the API endpoint. See https://developers.home-assistant.io/docs/en/external_api_rest.html
+url: http://hass-server:8123/api/states/sensor.tvroommedia # URL of the API endpoint. See https://developers.home-assistant.io/docs/en/external_api_rest.html
 token: redacted # Home Assistant long term token
 
 ```
