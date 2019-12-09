@@ -24,10 +24,12 @@ namespace MediaSensor
         private Sensor Sensor { get; }
         private ApiEndpoint ApiEndpoint { get; }
         private const string configurationFileName = "mediasensor.yaml";
+        private OverrideStatus OverrideToggleStatus = OverrideStatus.NotOverriding;
 
         public MainWindow()
         {
             InitializeComponent();
+            OverridePanel.Visibility = Visibility.Hidden;
             this.Configuration = new ConfigurationReader(configurationFileName);
             this.Sensor = new Sensor();
             ApiEndpoint = new ApiEndpoint(this.Sensor);
@@ -46,11 +48,11 @@ namespace MediaSensor
 
                     // Set initial UI and make initial request
                     var currentState = this.Sensor.CurrentState;
-                    this.ApiEndpoint.NotifyEndpoint(currentState);
+                    this.ApiEndpoint.NotifyEndpoint();
                     await this.Dispatcher.BeginInvoke((Action)(() =>
                     {
                         this.UpdateUi(currentState);
-                        this.OverrideButton.IsEnabled = true;
+                        OverridePanel.Visibility = Visibility.Visible;
                     }));
 
                     // Now that everything is fine, let's start the regular updates from the sensor.
@@ -113,6 +115,58 @@ namespace MediaSensor
         private void DisconnectUiUpdates()
         {
             Sensor.StateChanged -= Sensor_StateChanged;
+        }
+
+        private enum OverrideStatus
+        {
+            NotOverriding,              // Go to OverridingPlaying or OverridingStopped, depending on current state
+            OverridingPlaying,          // go to next state
+            InverseOfOverridingPlaying, // go to NotOverriding
+            OverridingStopped,          // go to next state
+            InverseOfOverridingStopped  // go to NotOverriding
+        }
+
+        private void OverrideButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Advance the state machine
+            switch (this.OverrideToggleStatus)
+            {
+                case OverrideStatus.NotOverriding:
+                    this.OverrideToggleStatus
+                        = (this.Sensor.CurrentState == MediaState.Playing || this.Sensor.CurrentState == MediaState.Standby)
+                        ? OverrideStatus.OverridingPlaying
+                        : OverrideStatus.OverridingStopped;
+                    break;
+                case OverrideStatus.OverridingPlaying:
+                    this.OverrideToggleStatus = OverrideStatus.InverseOfOverridingPlaying;
+                    break;
+                case OverrideStatus.OverridingStopped:
+                    this.OverrideToggleStatus = OverrideStatus.InverseOfOverridingStopped;
+                    break;
+                case OverrideStatus.InverseOfOverridingPlaying:
+                case OverrideStatus.InverseOfOverridingStopped:
+                    this.OverrideToggleStatus = OverrideStatus.NotOverriding;
+                    break;
+            }
+
+            // Act
+            switch (this.OverrideToggleStatus)
+            {
+                case OverrideStatus.NotOverriding:
+                    this.ApiEndpoint.StopOverriding();
+                    this.OverridingText.Text = "Override: No";
+                    break;
+                case OverrideStatus.OverridingPlaying:
+                case OverrideStatus.InverseOfOverridingStopped:
+                    this.ApiEndpoint.Override(MediaState.Stopped); 
+                    this.OverridingText.Text = "Override: Stopped";
+                    break;
+                case OverrideStatus.OverridingStopped:
+                case OverrideStatus.InverseOfOverridingPlaying:
+                    this.ApiEndpoint.Override(MediaState.Playing);
+                    this.OverridingText.Text = "Override: Playing";
+                    break;
+            }
         }
     }
 }

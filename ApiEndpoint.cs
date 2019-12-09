@@ -17,11 +17,9 @@ namespace MediaSensor
         public HttpClient Client { get; }
         private string Url { get; set;  }
         private string Token { get; set; }
-        internal bool IsOverriding { get; private set; }
         private bool IsInitialized { get; set; }
-
-        private MediaState CurrentMediaState;
-        private MediaState OverridingState;
+        private MediaState CurrentMediaState { get; set; }
+        internal MediaState? OverridingState { get; private set; }
 
         internal ApiEndpoint(Sensor sensor)
         {
@@ -54,63 +52,49 @@ namespace MediaSensor
             if (e.State != this.CurrentMediaState)
             {
                 this.CurrentMediaState = e.State;
-                if (!this.IsOverriding)
+                if (this.OverridingState == null)
                 {
-                    this.NotifyEndpoint(this.CurrentMediaState);
+                    this.NotifyEndpoint();
                 }
             }
         }
 
         internal void Override(MediaState overridingState)
         {
-            this.IsOverriding = true;
             this.OverridingState = overridingState;
-
-            if (overridingState != this.CurrentMediaState)
-            {
-                this.NotifyEndpoint(overridingState);
-            }
+            this.NotifyEndpoint();
         }
 
         internal void StopOverriding()
         {
-            this.IsOverriding = false;
-            if (this.CurrentMediaState != this.OverridingState)
-            {
-                this.NotifyEndpoint(this.CurrentMediaState);
-            }
+            this.OverridingState = null;
+            this.NotifyEndpoint();
         }
 
-        internal void NotifyEndpoint(MediaState currentMediaState)
+        internal void NotifyEndpoint()
         {
             if (!this.IsInitialized)
                 throw new InvalidOperationException("API Endpoint must be initialized first.");
 
             string value = "";
-            switch (currentMediaState)
+            switch (this.OverridingState, this.CurrentMediaState)
             {
-                case MediaState.Playing:
-                case MediaState.Standby:
+                case (MediaState.Playing, _):
+                case (MediaState.Standby, _):
+                    value = "playing forced";
+                    break;
+                case (MediaState.Stopped, _):
+                    value = "stopped forced";
+                    break;
+                case (null, MediaState.Playing):
+                case (null, MediaState.Standby):
                     value = "playing";
                     break;
-                case MediaState.Stopped:
+                case (null, MediaState.Stopped):
                     value = "stopped";
                     break;
             }
-            /*
-            switch (this.IsOverriding, currentMediaState)
-            {
-                case (true, _):
-                    break;
-                case (false, MediaState.Playing):
-                case (false, MediaState.Standby):
-                    value = "playing";
-                    break;
-                case (false, MediaState.Stopped):
-                    value = "stopped";
-                    break;
-            }
-            */
+
             var payload = String.Format(@"{{ ""state"": ""{0}"" }}", value);
 
             var request = new HttpRequestMessage(HttpMethod.Post, this.Url);
