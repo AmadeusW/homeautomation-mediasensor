@@ -4,6 +4,12 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <UseWPF>true</UseWPF>
+    <Version>1.1.0</Version>
+    <Authors>Amadeusz Wieczorek</Authors>
+    <Company>Amadeusz Wieczorek</Company>
+    <RepositoryUrl>https://github.com/AmadeusW/homeautomation-mediasensor</RepositoryUrl>
+    <ApplicationIcon>play.ico</ApplicationIcon>
+    <Win32Resource />
   </PropertyGroup>
 
 </Project>
