@@ -44,6 +44,7 @@ namespace MediaSensor
                         throw new InvalidOperationException($"Please update {configurationFileName}");
                     }
                     this.ApiEndpoint.Initialize(this.Configuration);
+                    this.Sensor.Initialize(this.Configuration);
                     ConnectUiUpdates();
 
                     // Set initial UI and make initial request
