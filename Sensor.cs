@@ -9,39 +9,88 @@ namespace MediaSensor
     /// </summary>
     internal class Sensor : IDisposable
     {
+        /// <summary>
+        /// Latched value of sensor state
+        /// </summary>
         internal MediaState CurrentState { get; private set; }
+
+        /// <summary>
+        /// Fired when <see cref="CurrentState"/> changes
+        /// </summary>
         internal event EventHandler<SensorStateEventArgs> StateChanged;
-        private Timer Timer { get; }
+
+        /// <summary>
+        /// Immediate value of sensor state
+        /// </summary>
+        private MediaState TransientState { get; set; }
+
+        private Timer SensorTimer { get; set; }
+        public Timer LatchTimer { get; private set; }
+        private bool Initialized { get; set; }
 
         internal Sensor()
         {
-            this.Timer = new Timer(500);
-            this.Timer.Elapsed += OnTimerElapsed;
+        }
+
+        internal void Initialize(ConfigurationReader configuration)
+        {
+            this.SensorTimer = new Timer(configuration.Poll);
+            this.SensorTimer.Elapsed += OnPollingDelayElapsed;
+            this.LatchTimer = new Timer(configuration.Latch);
+            this.LatchTimer.AutoReset = false;
+            this.LatchTimer.Elapsed += OnLatchingDelayElapsed;
+            this.Initialized = true;
         }
 
         internal void Start()
         {
-            this.Timer.Start();
+            if (this.Initialized)
+            {
+                this.SensorTimer.Start();
+            }
         }
 
         internal void Stop()
         {
-            this.Timer.Stop();
+            if (this.Initialized)
+            {
+                this.SensorTimer.Stop();
+                this.LatchTimer.Stop();
+            }
         }
 
         public void Dispose()
         {
-            Timer.Stop();
-            Timer.Elapsed -= OnTimerElapsed;
+            SensorTimer.Stop();
+            SensorTimer.Elapsed -= OnPollingDelayElapsed;
+            LatchTimer.Stop();
+            LatchTimer.Elapsed -= OnLatchingDelayElapsed;
         }
 
-        private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+        private void OnPollingDelayElapsed(object sender, ElapsedEventArgs e)
         {
             var newState = SensorCore.GetState();
-            if (newState != CurrentState)
+            if (newState != TransientState)
             {
-                CurrentState = newState;
+                TransientState = newState;
+                LatchTimer.Stop(); // Reset the latch timer
+                LatchTimer.Start();
+            }
+        }
+
+        private void OnLatchingDelayElapsed(object sender, ElapsedEventArgs e)
+        {
+            // If state has changed during latching delay, this timer would have been reset
+            // and would not have elapsed.
+            // If we're running this code, it means that the transient value has not changed.
+            if (CurrentState != TransientState)
+            {
+                CurrentState = TransientState;
                 StateChanged?.Invoke(this, new SensorStateEventArgs(CurrentState));
+            }
+            else
+            {
+                // We just averted a glitch
             }
         }
     }
