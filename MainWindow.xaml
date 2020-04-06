@@ -5,7 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MediaSensor"
         mc:Ignorable="d"
-        Title="Media sensor" Height="120" Width="260" StateChanged="Window_StateChanged" ResizeMode="CanMinimize">
+        Title="Media sensor" 
+        Height="120" Width="260" 
+        StateChanged="Window_StateChanged"
+        Closing="Window_Closing"
+        ResizeMode="CanMinimize">
     <StackPanel Orientation="Vertical" Margin="15">
         <TextBlock x:Name="StatusText" 
                    TextWrapping="Wrap" 

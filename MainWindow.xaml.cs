@@ -49,7 +49,7 @@ namespace MediaSensor
 
                     // Set initial UI and make initial request
                     var currentState = this.Sensor.CurrentState;
-                    this.ApiEndpoint.NotifyEndpoint();
+                    await this.ApiEndpoint.NotifyEndpoint();
                     await this.Dispatcher.BeginInvoke((Action)(() =>
                     {
                         this.UpdateUi(currentState);
@@ -168,6 +168,12 @@ namespace MediaSensor
                     this.OverridingText.Text = "Override: Playing";
                     break;
             }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            this.OverridingText.Text = "Shutting down";
+            this.ApiEndpoint.OverrideAndWait(MediaState.Playing);
         }
     }
 }

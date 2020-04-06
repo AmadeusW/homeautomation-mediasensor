@@ -54,24 +54,42 @@ namespace MediaSensor
                 this.CurrentMediaState = e.State;
                 if (this.OverridingState == null)
                 {
-                    this.NotifyEndpoint();
+                    Task.Run(async () =>
+                    {
+                        await this.NotifyEndpoint();
+                    });
                 }
             }
         }
 
-        internal void Override(MediaState overridingState)
+        internal void Override(MediaState newState)
         {
-            this.OverridingState = overridingState;
-            this.NotifyEndpoint();
+            this.OverridingState = newState;
+            Task.Run(async () =>
+            {
+                await this.NotifyEndpoint();
+            });
+        }
+
+        internal void OverrideAndWait(MediaState newState)
+        {
+            this.OverridingState = newState;
+            Task.Run(async () =>
+            {
+                await this.NotifyEndpoint();
+            }).Wait();
         }
 
         internal void StopOverriding()
         {
             this.OverridingState = null;
-            this.NotifyEndpoint();
+            Task.Run(async () =>
+            {
+                await this.NotifyEndpoint();
+            });
         }
 
-        internal void NotifyEndpoint()
+        internal async Task NotifyEndpoint()
         {
             if (!this.IsInitialized)
                 throw new InvalidOperationException("API Endpoint must be initialized first.");
@@ -101,11 +119,8 @@ namespace MediaSensor
             var content = new StringContent(payload);
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
-            Task.Run(async () =>
-            {
-                var whatImSending = await content.ReadAsStringAsync();
-                var response = await Client.PostAsync(this.Url, content).ConfigureAwait(false);
-            });
+            var whatImSending = await content.ReadAsStringAsync();
+            var response = await Client.PostAsync(this.Url, content).ConfigureAwait(false);
         }
     }
 }
