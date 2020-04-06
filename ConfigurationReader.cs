@@ -12,6 +12,7 @@ namespace MediaSensor
         internal int Poll { get; private set; }
         internal int Latch { get; private set; }
         internal bool Initialized { get; private set; }
+        internal bool SoundSensor { get; private set; }
 
         internal ConfigurationReader(string configurationFileName)
         {
@@ -38,6 +39,7 @@ namespace MediaSensor
                 File.WriteAllText(this.configurationFileName,
 @"url: http://host:8123/api/states/sensor.media # URL of the API endpoint. See https://developers.home-assistant.io/docs/en/external_api_rest.html
 token: InsertLongTermTokenHere # Home Assistant long term token
+soundsensor: true
 poll: 250 # Polling delay in milliseconds. This represents delay between calls to the OS.
 latch: 1000 # Latching delay in milliseconds. This represents duration of how long media state must be steady before making API call 
 ");
@@ -47,8 +49,8 @@ latch: 1000 # Latching delay in milliseconds. This represents duration of how lo
 
         private bool ReadConfiguration()
         {
-            bool gotUrl, gotToken, gotPoll, gotLatch;
-            gotUrl = gotToken = gotPoll = gotLatch = false;
+            bool gotUrl, gotToken, gotPoll, gotLatch, gotSoundSensor;
+            gotUrl = gotToken = gotPoll = gotLatch = gotSoundSensor = false;
 
             var lines = File.ReadAllLines(this.configurationFileName);
             foreach (var line in lines)
@@ -65,6 +67,10 @@ latch: 1000 # Latching delay in milliseconds. This represents duration of how lo
                         Token = value;
                         gotToken = true;
                         break;
+                    case "soundsensor":
+                        SoundSensor = Boolean.Parse(value);
+                        gotSoundSensor = true;
+                        break;
                     case "poll":
                         Poll = Int32.Parse(value);
                         gotPoll = true;
@@ -75,7 +81,7 @@ latch: 1000 # Latching delay in milliseconds. This represents duration of how lo
                         break;
                 }
 
-                if (gotUrl && gotToken && gotPoll && gotLatch)
+                if (gotUrl && gotToken && gotPoll && gotLatch && gotSoundSensor)
                     return true;
             }
 
@@ -83,6 +89,8 @@ latch: 1000 # Latching delay in milliseconds. This represents duration of how lo
                 throw new ApplicationException("Configuration did not contain key: url");
             if (!gotToken)
                 throw new ApplicationException("Configuration did not contain key: token");
+            if (!gotSoundSensor)
+                throw new ApplicationException("Configuration did not contain key: soundsensor");
             if (!gotPoll)
                 throw new ApplicationException("Configuration did not contain key: poll");
             if (!gotLatch)
