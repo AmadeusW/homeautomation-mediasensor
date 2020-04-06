@@ -6,7 +6,15 @@ It reports updates to the [Home Assistant](https://www.home-assistant.io/) serve
 The purpose of this app is to automatically turn off the light when the media is playing,
 and turn the light on when the media is stopped.
 
-![v1.1](https://user-images.githubusercontent.com/1673956/70494380-f170d200-1abf-11ea-8eec-27b1d7c40f95.png)
+![screenshot of v1.2](https://user-images.githubusercontent.com/1673956/78528009-34536580-7793-11ea-97b0-4ffdaf816960.png)
+
+## Features
+
+* Turn the light on when sound stops playing
+* Turn the light off when sound starts playing
+* Override the sound sensor and manually control the light
+* Don't use the sound sensor at all and manually control the light
+* Turn the light off when app closes
 
 ## Prerequisites
 
@@ -23,7 +31,7 @@ url: http://hass-server:8123/api/states/sensor.tvroommedia # URL of the API endp
 token: redacted # Home Assistant long term token
 poll: 250 # Polling delay in milliseconds. This represents delay between calls to the OS.
 latch: 1000 # Latching delay in milliseconds. This represents duration of how long media state must be steady before making API call 
-
+soundsensor: true # true to use sound sensor. false to use the app as on-off switch
 ```
 
 `automations.yaml` on the Home Assistant server
