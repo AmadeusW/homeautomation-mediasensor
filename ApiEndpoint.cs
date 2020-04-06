@@ -73,6 +73,9 @@ namespace MediaSensor
 
         internal void OverrideAndWait(MediaState newState)
         {
+            if (!IsInitialized)
+                return;
+
             this.OverridingState = newState;
             Task.Run(async () =>
             {
