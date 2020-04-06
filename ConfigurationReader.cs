@@ -39,9 +39,9 @@ namespace MediaSensor
                 File.WriteAllText(this.configurationFileName,
 @"url: http://host:8123/api/states/sensor.media # URL of the API endpoint. See https://developers.home-assistant.io/docs/en/external_api_rest.html
 token: InsertLongTermTokenHere # Home Assistant long term token
-soundsensor: true
 poll: 250 # Polling delay in milliseconds. This represents delay between calls to the OS.
 latch: 1000 # Latching delay in milliseconds. This represents duration of how long media state must be steady before making API call 
+soundsensor: true # true to use sound sensor. false use the app as on-off switch
 ");
                 Initialized = false;
             }
@@ -89,12 +89,12 @@ latch: 1000 # Latching delay in milliseconds. This represents duration of how lo
                 throw new ApplicationException("Configuration did not contain key: url");
             if (!gotToken)
                 throw new ApplicationException("Configuration did not contain key: token");
-            if (!gotSoundSensor)
-                throw new ApplicationException("Configuration did not contain key: soundsensor");
             if (!gotPoll)
-                throw new ApplicationException("Configuration did not contain key: poll");
+                throw new ApplicationException("Configuration did not contain key with integer value: poll");
             if (!gotLatch)
-                throw new ApplicationException("Configuration did not contain key: latch");
+                throw new ApplicationException("Configuration did not contain key with integer value: latch");
+            if (!gotSoundSensor)
+                throw new ApplicationException("Configuration did not contain key with Boolean value: soundsensor");
             return false;
         }
 
