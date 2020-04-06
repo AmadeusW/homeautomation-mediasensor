@@ -21,7 +21,7 @@
                    LastChildFill="False">
             <TextBlock x:Name="OverridingText"
                        DockPanel.Dock="Left">
-                Override: off
+                Switch: Auto
             </TextBlock>
             <Button x:Name="OverrideButton" 
                     Margin="5 -1 0 0" 
