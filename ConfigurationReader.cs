@@ -104,8 +104,8 @@ latch: 1000 # Latching delay in milliseconds. This represents duration of how lo
             if (separatorIndex == -1)
                 return (text, string.Empty);
 
-            var before = separator > 0 ? text.Substring(0, separatorIndex) : string.Empty;
-            var after = separator + 1 < text.Length ? text.Substring(separatorIndex + 1) : string.Empty;
+            var before = separatorIndex > 0 ? text.Substring(0, separatorIndex) : string.Empty;
+            var after = separatorIndex + 1 < text.Length ? text.Substring(separatorIndex + 1) : string.Empty;
             return (before.Trim(), after.Trim());
         }
     }
