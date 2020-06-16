@@ -7,7 +7,6 @@
         mc:Ignorable="d"
         Title="Media sensor" 
         Height="120" Width="260" 
-        StateChanged="Window_StateChanged"
         Closing="Window_Closing"
         ResizeMode="CanMinimize">
     <StackPanel Orientation="Vertical" Margin="15">

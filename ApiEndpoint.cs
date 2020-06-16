@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Navigation;
 
 namespace MediaSensor
 {
@@ -44,77 +45,20 @@ namespace MediaSensor
             this.Token = configuration.Token;
             this.Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", this.Token);
             this.IsInitialized = true;
-            this.Sensor.StateChanged += Sensor_StateChanged;
         }
 
-        private void Sensor_StateChanged(object sender, SensorStateEventArgs e)
-        {
-            if (e.State != this.CurrentMediaState)
-            {
-                this.CurrentMediaState = e.State;
-                if (this.OverridingState == null)
-                {
-                    Task.Run(async () =>
-                    {
-                        await this.NotifyEndpoint();
-                    });
-                }
-            }
-        }
-
-        internal void Override(MediaState newState)
-        {
-            this.OverridingState = newState;
-            Task.Run(async () =>
-            {
-                await this.NotifyEndpoint();
-            });
-        }
-
-        internal void OverrideAndWait(MediaState newState)
-        {
-            if (!IsInitialized)
-                return;
-
-            this.OverridingState = newState;
-            Task.Run(async () =>
-            {
-                await this.NotifyEndpoint();
-            }).Wait();
-        }
-
-        internal void StopOverriding()
-        {
-            this.OverridingState = null;
-            Task.Run(async () =>
-            {
-                await this.NotifyEndpoint();
-            });
-        }
-
-        internal async Task NotifyEndpoint()
+        internal async Task NotifyEndpoint(TargetState state)
         {
             if (!this.IsInitialized)
                 throw new InvalidOperationException("API Endpoint must be initialized first.");
 
-            string value = "";
-            switch (this.OverridingState, this.CurrentMediaState)
+            string value = state switch
             {
-                case (MediaState.Playing, _):
-                case (MediaState.Standby, _):
-                    value = "force playing";
-                    break;
-                case (MediaState.Stopped, _):
-                    value = "force stopped";
-                    break;
-                case (null, MediaState.Playing):
-                case (null, MediaState.Standby):
-                    value = "playing";
-                    break;
-                case (null, MediaState.Stopped):
-                    value = "stopped";
-                    break;
-            }
+                TargetState.On => "playing",
+                TargetState.Off => "stopped",
+                TargetState.Shutdown => "shutdown",
+                _ => "other",
+            };
 
             var payload = String.Format(@"{{ ""state"": ""{0}"" }}", value);
 

@@ -95,23 +95,6 @@ namespace MediaSensor
         }
     }
 
-    internal enum MediaState
-    {
-        Stopped,
-        Standby,
-        Playing
-    }
-
-    internal class SensorStateEventArgs : EventArgs
-    {
-        internal MediaState State { get; }
-
-        internal SensorStateEventArgs(MediaState state)
-        {
-            this.State = state;
-        }
-    }
-
     /// <summary>
     /// Contains code which detects status of the media.
     /// Source: https://stackoverflow.com/a/45483843/879243

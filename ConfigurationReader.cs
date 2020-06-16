@@ -6,7 +6,7 @@ namespace MediaSensor
 {
     class ConfigurationReader
     {
-        private readonly string configurationFileName;
+        internal const string ConfigurationFileName = "mediasensor.yaml";
         internal string Url { get; private set; }
         internal string Token { get; private set; }
         internal int Poll { get; private set; }
@@ -14,13 +14,8 @@ namespace MediaSensor
         internal bool Initialized { get; private set; }
         internal bool SoundSensor { get; private set; }
 
-        internal ConfigurationReader(string configurationFileName)
+        internal ConfigurationReader()
         {
-            if (String.IsNullOrWhiteSpace(configurationFileName))
-            {
-                throw new ArgumentNullException(nameof(configurationFileName));
-            }
-            this.configurationFileName = configurationFileName;
         }
 
         internal void Initialize()
@@ -28,7 +23,7 @@ namespace MediaSensor
             if (Initialized)
                 return;
 
-            if (File.Exists(this.configurationFileName))
+            if (File.Exists(ConfigurationFileName))
             {
                 ReadConfiguration();
                 Initialized = true;
@@ -36,7 +31,7 @@ namespace MediaSensor
             else
             {
                 // Produce a sample configuration
-                File.WriteAllText(this.configurationFileName,
+                File.WriteAllText(ConfigurationFileName,
 @"url: http://host:8123/api/states/sensor.media # URL of the API endpoint. See https://developers.home-assistant.io/docs/en/external_api_rest.html
 token: InsertLongTermTokenHere # Home Assistant long term token
 poll: 250 # Polling delay in milliseconds. This represents delay between calls to the OS.
@@ -52,7 +47,7 @@ soundsensor: true # true to use sound sensor. false use the app as on-off switch
             bool gotUrl, gotToken, gotPoll, gotLatch, gotSoundSensor;
             gotUrl = gotToken = gotPoll = gotLatch = gotSoundSensor = false;
 
-            var lines = File.ReadAllLines(this.configurationFileName);
+            var lines = File.ReadAllLines(ConfigurationFileName);
             foreach (var line in lines)
             {
                 var (key, rest) = GetBeforeAndAfter(line, ':');

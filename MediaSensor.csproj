@@ -10,6 +10,7 @@
     <RepositoryUrl>https://github.com/AmadeusW/homeautomation-mediasensor</RepositoryUrl>
     <ApplicationIcon>play.ico</ApplicationIcon>
     <Win32Resource />
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>
