@@ -20,50 +20,30 @@ namespace MediaSensor
             Configuration = configuration;
             ApiEndpoint = apiEndpoint;
             Sensor = sensor;
-
-            OverrideState = Configuration.SoundSensor ? TargetState.FromMedia : TargetState.On;
             this.Sensor.StateChanged += Sensor_StateChanged;
         }
 
         internal async Task InitializeAsync()
         {
-            try
+            if (this.Configuration.SoundSensor)
             {
-                this.Configuration.Initialize();
-                if (this.Configuration.Initialized == false)
-                {
-                    // Configuration was just created. There is no point continuing.
-                    throw new InvalidOperationException($"Please update {ConfigurationReader.ConfigurationFileName}");
-                }
-                this.ApiEndpoint.Initialize(this.Configuration);
-                if (this.Configuration.SoundSensor)
-                {
-                    this.Sensor.Initialize(this.Configuration);
+                this.Sensor.Initialize(this.Configuration);
 
-                    // Prepare for the initial request and UI update
-                    this.MediaState = this.Sensor.CurrentState;
+                // Start with the light tuned to the music
+                this.MediaState = this.Sensor.CurrentState;
+                this.OverrideState = TargetState.FromMedia;
 
-                    // Start regular updates from the sensor
-                    this.Sensor.Start();
-                }
-                else
-                {
-                    // Start with the light on
-                    this.OverrideState = TargetState.On;
-                }
-
-                this.UpdateUi();
-                await this.UpdateEndpointAsync();
+                // Begin regular updates from the sensor
+                this.Sensor.Start();
             }
-            catch (Exception ex)
+            else
             {
-                this.HandleException(ex);
+                // Start with the light on
+                this.OverrideState = TargetState.On;
             }
-        }
 
-        private void Sensor_StateChanged(object sender, SensorStateEventArgs e)
-        {
-            SetMediaStateAsync(e.State);
+            this.UpdateUi();
+            await this.UpdateEndpointAsync();
         }
 
         internal async Task ShutdownAsync()
@@ -108,34 +88,31 @@ namespace MediaSensor
 
         internal async Task UpdateEndpointAsync()
         {
-            TargetState target = OverrideState switch
+            string stateName = OverrideState switch
             {
-                TargetState.On => TargetState.On,
-                TargetState.Off => TargetState.Off,
-                TargetState.Shutdown => TargetState.Shutdown,
+                TargetState.On => "on switch",
+                TargetState.Off => "off switch",
+                TargetState.Shutdown => "shutdown",
                 TargetState.FromMedia => MediaState switch
                 {
-                    MediaState.Playing => TargetState.Off, // volume greater than 0
-                    MediaState.Standby => TargetState.Off, // volume smidgen
-                    MediaState.Stopped => TargetState.On, // volume 0
+                    MediaState.Playing => "off media", // volume greater than 0
+                    MediaState.Standby => "off media", // volume smidgen
+                    MediaState.Stopped => "on media", // volume 0
                 },
             };
 
-            await ApiEndpoint.NotifyEndpoint(target);
+            await ApiEndpoint.NotifyEndpoint(stateName);
+        }
+
+        private void Sensor_StateChanged(object sender, SensorStateEventArgs e)
+        {
+            SetMediaStateAsync(e.State);
         }
 
         private void UpdateUi()
         {
             var args = new UpdateArgs(this.MediaState, this.OverrideState, exception: null);
             this.StateUpdated?.Invoke(this, args);
-        }
-
-        private void HandleException(Exception ex)
-        {
-            // Stop the updates
-            this.Sensor.Stop();
-            var args = new UpdateArgs(this.MediaState, this.OverrideState, exception: ex);
-            StateUpdated?.Invoke(this, args);
         }
     }
 }

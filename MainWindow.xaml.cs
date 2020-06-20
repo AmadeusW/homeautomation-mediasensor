@@ -9,7 +9,9 @@ namespace MediaSensor
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Core Core { get; set; }
+        private Core Core { get; }
+        private ConfigurationReader Configuration { get; }
+        private Sensor Sensor { get; }
 
         private bool ShowMediaState { get; set; }
         private bool ShowOverrideState { get; set; }
@@ -18,20 +20,39 @@ namespace MediaSensor
         {
             InitializeComponent();
             OverridePanel.Visibility = Visibility.Hidden;
-            var configuration = new ConfigurationReader();
-            var sensor = new Sensor();
-            var apiEndpoint = new ApiEndpoint(sensor);
-            this.Core = new Core(configuration, apiEndpoint, sensor);
+            this.Configuration = new ConfigurationReader();
+            this.Sensor = new Sensor();
+            var apiEndpoint = new ApiEndpoint(this.Sensor, this.Configuration);
+            this.Core = new Core(this.Configuration, apiEndpoint, this.Sensor);
             this.Core.StateUpdated += OnStateUpdated;
-
-            ShowMediaState = configuration.SoundSensor;
-            ShowOverrideState = false; // until user toggles it
 
             Task.Run(async () =>
             {
-                await this.Core.InitializeAsync();
-                await this.Core.UpdateEndpointAsync();
+                try
+                {
+                    await this.InitializeAsync();
+                }
+                catch (Exception ex)
+                {
+                    this.HandleException(ex);
+                }
             });
+        }
+
+        private async Task InitializeAsync()
+        {
+            this.Configuration.Initialize();
+            if (this.Configuration.Initialized == false)
+            {
+                // Configuration was just created. There is no point continuing.
+                throw new InvalidOperationException($"Please update {ConfigurationReader.ConfigurationFileName}");
+            }
+
+            ShowMediaState = this.Configuration.SoundSensor;
+            ShowOverrideState = true;
+
+            await this.Core.InitializeAsync();
+            await this.Core.UpdateEndpointAsync();
         }
 
         private void OnStateUpdated(object? sender, UpdateArgs e)
@@ -75,7 +96,18 @@ namespace MediaSensor
 
         private void HandleException(Exception ex)
         {
-            this.StatusText.Visibility = Visibility.Visible;
+            // Immediately stop further updates
+            this.Sensor.Stop();
+
+            // Switch to UI thread if needed
+            if (System.Windows.Threading.Dispatcher.CurrentDispatcher != this.Dispatcher)
+            {
+                this.Dispatcher.BeginInvoke((Action)(() => this.HandleException(ex)));
+                return;
+            }
+
+            // Update UI
+            this.OverridePanel.Visibility = Visibility.Collapsed;
             this.StatusText.Text = ex.Message;
         }
 
@@ -83,7 +115,14 @@ namespace MediaSensor
         {
             Task.Run(async () =>
             {
-                await this.Core.ToggleOverrideAsync();
+                try
+                {
+                    await this.Core.ToggleOverrideAsync();
+                }
+                catch (Exception ex)
+                {
+                    this.HandleException(ex);
+                }
             });
         }
 
@@ -91,7 +130,14 @@ namespace MediaSensor
         {
             Task.Run(async () =>
             {
-                await this.Core.ShutdownAsync();
+                try
+                {
+                    await this.Core.ShutdownAsync();
+                }
+                catch (Exception ex)
+                {
+                    this.HandleException(ex);
+                }
             }).Wait();
         }
     }

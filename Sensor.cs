@@ -39,6 +39,9 @@ namespace MediaSensor
             this.LatchTimer = new Timer(configuration.Latch);
             this.LatchTimer.AutoReset = false;
             this.LatchTimer.Elapsed += OnLatchingDelayElapsed;
+
+            this.CurrentState = SensorCore.GetState();
+
             this.Initialized = true;
         }
 
