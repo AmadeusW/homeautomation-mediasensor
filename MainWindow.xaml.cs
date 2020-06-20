@@ -14,12 +14,10 @@ namespace MediaSensor
         private Sensor Sensor { get; }
 
         private bool ShowMediaState { get; set; }
-        private bool ShowOverrideState { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
-            OverridePanel.Visibility = Visibility.Hidden;
             this.Configuration = new ConfigurationReader();
             this.Sensor = new Sensor();
             var apiEndpoint = new ApiEndpoint(this.Sensor, this.Configuration);
@@ -49,7 +47,6 @@ namespace MediaSensor
             }
 
             ShowMediaState = this.Configuration.SoundSensor;
-            ShowOverrideState = true;
 
             await this.Core.InitializeAsync();
             await this.Core.UpdateEndpointAsync();
@@ -85,12 +82,6 @@ namespace MediaSensor
                 TargetState.Shutdown => "Switch: On for just a minute",
             };
 
-            if (args.OverrideState != TargetState.FromMedia)
-            {
-                this.ShowOverrideState = true;
-            }
-
-            this.OverridePanel.Visibility = this.ShowOverrideState ? Visibility.Visible : Visibility.Collapsed;
             this.StatusText.Visibility = this.ShowMediaState ? Visibility.Visible : Visibility.Collapsed;
         }
 
@@ -107,7 +98,6 @@ namespace MediaSensor
             }
 
             // Update UI
-            this.OverridePanel.Visibility = Visibility.Collapsed;
             this.StatusText.Text = ex.Message;
         }
 

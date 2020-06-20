@@ -6,29 +6,29 @@
         xmlns:local="clr-namespace:MediaSensor"
         mc:Ignorable="d"
         Title="Media sensor" 
-        Height="120" Width="260" 
+        Width="260"
         Closing="Window_Closing"
-        ResizeMode="CanMinimize">
-    <StackPanel Orientation="Vertical" Margin="15">
-        <TextBlock x:Name="StatusText" 
-                   TextWrapping="Wrap" 
-                   ToolTip="{Binding Path=Text, ElementName=StatusText}">
-            Initializing...
-        </TextBlock>
-        <DockPanel x:Name="OverridePanel" 
-                   Margin="0 10"
-                   LastChildFill="False">
-            <TextBlock x:Name="OverridingText"
-                       DockPanel.Dock="Left">
-                Switch: Auto
-            </TextBlock>
-            <Button x:Name="OverrideButton" 
-                    Margin="5 -1 0 0" 
+        SizeToContent="Height"
+        ResizeMode="CanMinimize"
+        >
+    <DockPanel Margin="15" LastChildFill="False">
+        <Button x:Name="OverrideButton"
+                    Margin="5 0 0 0" 
                     DockPanel.Dock="Right" 
                     Width="60"
                     Padding="4 1" Click="OverrideButton_Click">
-                Toggle
-            </Button>
-        </DockPanel>
-    </StackPanel>
+            Toggle
+        </Button>
+        <StackPanel>
+            <TextBlock x:Name="OverridingText"
+                       Margin="0 0 0 8">
+                Switch: Auto
+            </TextBlock>
+            <TextBlock x:Name="StatusText" 
+                   TextWrapping="Wrap" 
+                   ToolTip="{Binding Path=Text, ElementName=StatusText}">
+            Initializing...
+            </TextBlock>
+        </StackPanel>
+    </DockPanel>
 </Window>
