@@ -6,15 +6,15 @@ It reports updates to the [Home Assistant](https://www.home-assistant.io/) serve
 The purpose of this app is to automatically turn off the light when the media is playing,
 and turn the light on when the media is stopped.
 
-![screenshot of v1.2](https://user-images.githubusercontent.com/1673956/78528009-34536580-7793-11ea-97b0-4ffdaf816960.png)
+![v1.3 screenshot](https://user-images.githubusercontent.com/1673956/85217983-da524d00-b34a-11ea-82f5-2331772eb453.png)
 
 ## Features
 
 * Turn the light on when sound stops playing
 * Turn the light off when sound starts playing
 * Override the sound sensor and manually control the light
-* Don't use the sound sensor at all and manually control the light
-* Turn the light off when app closes
+* Turn the light off after a delay when app closes
+* Don't use the sound sensor at all
 
 ## Prerequisites
 
@@ -37,53 +37,67 @@ soundsensor: true # true to use sound sensor. false to use the app as on-off swi
 `automations.yaml` on the Home Assistant server
 
 ```yaml
-- alias: Media STOPPED Light ON at NIGHT
-  description: 'When media is Stopped, and it is night time, turn the light on'
+- alias: mediasensor tv room lights on via media
+  description: Lights turn on at night when media is stopped
   trigger:
   - entity_id: sensor.tvroommedia
     platform: state
-    to: stopped
+    to: on media
   condition:
-  - condition: sun
-    after: sunrise
-    before: sunseet
+  - condition: state
+    entity_id: sun.sun
+    state: 'below_horizon'
   action:
-  - data:
+  - service: switch.turn_on
+    data:
       entity_id: switch.tv_room
-    service: switch.turn_on
-- alias: Media PLAYING Lights OFF at NIGHT
-  description: 'When media is Playing, and it is night time, turn the light off'
-  trigger:
-  - entity_id: sensor.tvroommedia
-    platform: state
-    to: playing
-  condition:
-  - condition: sun
-    after: sunrise
-    before: sunset
-  action:
-  - data:
-      entity_id: switch.tv_room
-    service: switch.turn_off
-- alias: Media FORCE STOPPED Light ON
-  description: 'When media is force set to Stopped, turn the light on'
-  trigger:
-  - entity_id: sensor.tvroommedia
-    platform: state
-    to: force stopped
-  action:
-  - data:
-      entity_id: switch.tv_room
-    service: switch.turn_on
-- alias: Media FORCE PLAYING Lights OFF
-  description: 'When media is force set to Playing, turn the light off'
-  trigger:
-  - entity_id: sensor.tvroommedia
-    platform: state
-    to: force playing
-  action:
-  - data:
-      entity_id: switch.tv_room
-    service: switch.turn_off
 
+- alias: mediasensor tv room lights off via media
+  description: Lights turn off at night when media plays
+  trigger:
+  - entity_id: sensor.tvroommedia
+    platform: state
+    to: off media
+  condition:
+  - condition: state
+    entity_id: sun.sun
+    state: 'below_horizon'
+  action:
+  - service: switch.turn_off
+    data:
+      entity_id: switch.tv_room
+
+- alias: mediasensor tv room lights on via switch
+  description: Light turns on when switch is set
+  trigger:
+  - entity_id: sensor.tvroommedia
+    platform: state
+    to: on switch
+  action:
+  - service: switch.turn_on
+    data:
+      entity_id: switch.tv_room
+
+- alias: mediasensor tv room lights off via switch
+  description: Light turns off when switch is reset
+  trigger:
+  - entity_id: sensor.tvroommedia
+    platform: state
+    to: off switch
+  action:
+  - service: switch.turn_off
+    data:
+      entity_id: switch.tv_room
+
+- alias: mediasensor tv room lights off after delay
+  description: Light turns off two minutes after app shuts down
+  trigger:
+  - entity_id: sensor.tvroommedia
+    platform: state
+    to: shutdown
+  action:
+  - delay: 0:02
+  - service: switch.turn_off
+    data:
+      entity_id: switch.tv_room
 ```
