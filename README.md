@@ -13,8 +13,9 @@ and turn the light on when the media is stopped.
 * Turn the light on when sound stops playing
 * Turn the light off when sound starts playing
 * Override the sound sensor and manually control the light
-* Turn the light off after a delay when app closes
-* Don't use the sound sensor at all
+* Control the light when minimized app restores (Mouse free operation e.g. with alt tab)
+* Turn the light off after a delay when app closes (On shutdown)
+* Option to not use the sound sensor at all (Manual operation)
 
 ## Prerequisites
 
@@ -32,6 +33,7 @@ token: redacted # Home Assistant long term token
 poll: 250 # Polling delay in milliseconds. This represents delay between calls to the OS.
 latch: 1000 # Latching delay in milliseconds. This represents duration of how long media state must be steady before making API call 
 soundsensor: true # true to use sound sensor. false to use the app as on-off switch
+onrestore: true # true to toggle on restore. false to not react to window restore
 ```
 
 `automations.yaml` on the Home Assistant server
