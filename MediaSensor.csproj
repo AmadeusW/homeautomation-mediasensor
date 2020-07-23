@@ -11,6 +11,7 @@
     <ApplicationIcon>play.ico</ApplicationIcon>
     <Win32Resource />
     <Nullable>enable</Nullable>
+    <WarningsAsErrors>true</WarningsAsErrors>
   </PropertyGroup>
 
 </Project>

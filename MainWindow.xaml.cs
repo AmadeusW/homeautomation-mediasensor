@@ -104,6 +104,7 @@ namespace MediaSensor
                 MediaState.Stopped => "Media: Stopped",
                 MediaState.Standby => "Media: Standby",
                 MediaState.Playing => "Media: Playing",
+                _ => "Media: error",
             };
             this.OverridingText.Text = args.OverrideState switch
             {
@@ -111,6 +112,7 @@ namespace MediaSensor
                 TargetState.On => "Switch: On",
                 TargetState.FromMedia => "Switch: Auto",
                 TargetState.Shutdown => "Switch: On for just a minute",
+                _ => "Switch: error",
             };
 
             this.StatusText.Visibility = this.ShowMediaState ? Visibility.Visible : Visibility.Collapsed;

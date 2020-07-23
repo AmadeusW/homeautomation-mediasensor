@@ -7,8 +7,8 @@ namespace MediaSensor
     class ConfigurationReader
     {
         internal const string ConfigurationFileName = "mediasensor.yaml";
-        internal string Url { get; private set; }
-        internal string Token { get; private set; }
+        internal string Url { get; private set; } = string.Empty;
+        internal string Token { get; private set; } = string.Empty;
         internal int Poll { get; private set; }
         internal int Latch { get; private set; }
         internal bool Initialized { get; private set; }

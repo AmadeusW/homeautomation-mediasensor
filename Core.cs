@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MediaSensor
 {
     internal class Core
     {
-        internal event EventHandler<UpdateArgs> StateUpdated;
+        internal event EventHandler<UpdateArgs>? StateUpdated;
 
         ApiEndpoint ApiEndpoint { get; }
         Sensor Sensor { get; }
@@ -76,10 +74,12 @@ namespace MediaSensor
                     MediaState.Playing => TargetState.On,
                     MediaState.Standby => TargetState.On,
                     MediaState.Stopped => TargetState.Off,
+                    _ => TargetState.Off,
                 },
                 // Without media sensor, we only have on and off states
                 TargetState.On => Configuration.SoundSensor ? TargetState.FromMedia : TargetState.Off,
                 TargetState.Off => Configuration.SoundSensor ? TargetState.FromMedia : TargetState.On,
+                _ => TargetState.FromMedia,
             };
 
             this.UpdateUi();
@@ -98,15 +98,17 @@ namespace MediaSensor
                     MediaState.Playing => "off media", // volume greater than 0
                     MediaState.Standby => "off media", // volume smidgen
                     MediaState.Stopped => "on media", // volume 0
+                    _ => "error"
                 },
+                _ => "error"
             };
 
             await ApiEndpoint.NotifyEndpoint(stateName);
         }
 
-        private void Sensor_StateChanged(object sender, SensorStateEventArgs e)
+        private void Sensor_StateChanged(object? sender, SensorStateEventArgs e)
         {
-            SetMediaStateAsync(e.State);
+            _ = SetMediaStateAsync(e.State);
         }
 
         private void UpdateUi()
