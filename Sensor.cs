@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Timers;
 
@@ -17,7 +18,7 @@ namespace MediaSensor
         /// <summary>
         /// Fired when <see cref="CurrentState"/> changes
         /// </summary>
-        internal event EventHandler<SensorStateEventArgs> StateChanged;
+        internal event EventHandler<SensorStateEventArgs>? StateChanged;
 
         /// <summary>
         /// Immediate value of sensor state
@@ -30,13 +31,15 @@ namespace MediaSensor
 
         internal Sensor()
         {
+            this.SensorTimer = new Timer();
+            this.LatchTimer = new Timer();
         }
 
         internal void Initialize(ConfigurationReader configuration)
         {
-            this.SensorTimer = new Timer(configuration.Poll);
+            this.SensorTimer.Interval = configuration.Poll;
             this.SensorTimer.Elapsed += OnPollingDelayElapsed;
-            this.LatchTimer = new Timer(configuration.Latch);
+            this.LatchTimer.Interval = configuration.Latch;
             this.LatchTimer.AutoReset = false;
             this.LatchTimer.Elapsed += OnLatchingDelayElapsed;
 
