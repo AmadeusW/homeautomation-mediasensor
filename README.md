@@ -10,18 +10,22 @@ and turn the light on when the media is stopped.
 
 ## Features
 
-* Turn the light on when sound stops playing
-* Turn the light off when sound starts playing
-* Override the sound sensor and manually control the light
-* Control the light when minimized app restores (Mouse free operation e.g. with alt tab)
-* Turn the light off after a delay when app closes (On shutdown)
-* Option to not use the sound sensor at all (Manual operation)
+* Turn on the light when media pauses
+  * Turn the light on when sound stops playing
+  * Turn the light off when sound starts playing
+* Use as a light switch
+  * Override the sound sensor and manually control the light
+  * Option to not use the sound sensor at all
+* Mouse free operation
+  * Control the light when minimized app restores (e.g. with alt tab)
+* Don't worry about turning the PC off
+  * Turn the light off after a delay when app closes
 
 ## Prerequisites
 
 * Home Assistant: https://www.home-assistant.io/
 * Windows 10
-* .NET Core 3.0 runtime: https://dotnet.microsoft.com/download/dotnet-core/3.0
+* .NET Core 3.1 runtime: https://dotnet.microsoft.com/download/dotnet-core/3.1
 
 ## Sample code
 
