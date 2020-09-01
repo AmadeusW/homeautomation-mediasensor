@@ -1,0 +1,34 @@
+### This template is meant to be used by a C# repository running RichNav
+### Please fill anything marked above with a "# **** #" comment with the value appropriate for your repository
+name: Rich Code Navigation (.NET Core)
+
+on:
+  pull_request:
+  push:
+  # **** Add any the name of your default branch, or any branch you want indexed on every push **** #
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    # **** If you've defined a specific dotnet version in global.json, change 'dotnet-version' to the version of the .NET SDK used in your project **** #
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+
+    # **** Please change 'working-directory' to be the location where your .SLN file is located **** #
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: .
+      
+    - uses: microsoft/RichCodeNavIndexer@v0.1
+      with: 
+        languages: csharp
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
