@@ -26,6 +26,8 @@ namespace MediaSensor
             var apiEndpoint = new ApiEndpoint(this.Sensor, this.Configuration);
             this.Core = new Core(this.Configuration, apiEndpoint, this.Sensor);
             this.Core.StateUpdated += OnStateUpdated;
+            Application.Current.SessionEnding += OnSessionEnding;
+            this.Closing += OnWindowClosing;
 
             Task.Run(async () =>
             {
@@ -123,7 +125,13 @@ namespace MediaSensor
             RunAsyncSafely(async () => await this.Core.ToggleOverrideAsync());
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            RunAsyncSafely(async () => await this.Core.ShutdownAsync())
+                .Wait();
+        }
+
+        private void OnSessionEnding(object sender, SessionEndingCancelEventArgs e)
         {
             RunAsyncSafely(async () => await this.Core.ShutdownAsync())
                 .Wait();
