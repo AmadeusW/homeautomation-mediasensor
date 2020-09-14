@@ -13,7 +13,6 @@ namespace MediaSensor
         internal int Latch { get; private set; }
         internal bool Initialized { get; private set; }
         internal bool SoundSensor { get; private set; }
-        internal bool ToggleOnRestore { get; private set; }
 
         internal ConfigurationReader()
         {
@@ -36,9 +35,8 @@ namespace MediaSensor
 @"url: http://host:8123/api/states/sensor.media # URL of the API endpoint. See https://developers.home-assistant.io/docs/en/external_api_rest.html
 token: InsertLongTermTokenHere # Home Assistant long term token
 poll: 250 # Polling delay in milliseconds. This represents delay between calls to the OS.
-latch: 1000 # Latching delay in milliseconds. This represents duration of how long media state must be steady before making API call 
+latch: 1000 # Latching delay in milliseconds. This represents duration of how long media state must be steady before making API call
 soundsensor: true # true to use sound sensor. false to use the app as on-off switch
-onrestore: true # true to toggle on restore. false to not react to window restore
 ");
                 Initialized = false;
             }
@@ -46,8 +44,8 @@ onrestore: true # true to toggle on restore. false to not react to window restor
 
         private bool ReadConfiguration()
         {
-            bool gotUrl, gotToken, gotPoll, gotLatch, gotSoundSensor, gotRestore;
-            gotUrl = gotToken = gotPoll = gotLatch = gotSoundSensor = gotRestore = false;
+            bool gotUrl, gotToken, gotPoll, gotLatch, gotSoundSensor;
+            gotUrl = gotToken = gotPoll = gotLatch = gotSoundSensor = false;
 
             var lines = File.ReadAllLines(ConfigurationFileName);
             foreach (var line in lines)
@@ -76,13 +74,9 @@ onrestore: true # true to toggle on restore. false to not react to window restor
                         Latch = Int32.Parse(value);
                         gotLatch = true;
                         break;
-                    case "onrestore":
-                        ToggleOnRestore = Boolean.Parse(value);
-                        gotRestore = true;
-                        break;
                 }
 
-                if (gotUrl && gotToken && gotPoll && gotLatch && gotSoundSensor && gotRestore)
+                if (gotUrl && gotToken && gotPoll && gotLatch && gotSoundSensor)
                     return true;
             }
 
@@ -96,8 +90,6 @@ onrestore: true # true to toggle on restore. false to not react to window restor
                 throw new ApplicationException("Configuration did not contain key with integer value: latch");
             if (!gotSoundSensor)
                 throw new ApplicationException("Configuration did not contain key with Boolean value: soundsensor");
-            if (!gotRestore)
-                throw new ApplicationException("Configuration did not contain key with Boolean value: onrestore");
             return false;
         }
 
