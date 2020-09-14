@@ -17,9 +17,9 @@ and turn the light on when the media is stopped.
   * Override the sound sensor and manually control the light
   * Option to not use the sound sensor at all
 * Mouse free operation
-  * Control the light when minimized app restores (e.g. with alt tab)
+  * Space, Enter and Escape shortcuts to operate and/or minimize the app.
 * Don't worry about turning the PC off
-  * Turn the light off after a delay when app closes
+  * The light turns off a minute after the app closes
 
 ## Prerequisites
 
@@ -36,8 +36,7 @@ url: http://hass-server:8123/api/states/sensor.tvroommedia # URL of the API endp
 token: redacted # Home Assistant long term token
 poll: 250 # Polling delay in milliseconds. This represents delay between calls to the OS.
 latch: 1000 # Latching delay in milliseconds. This represents duration of how long media state must be steady before making API call 
-soundsensor: true # true to use sound sensor. false to use the app as on-off switch
-onrestore: true # true to toggle on restore. false to not react to window restore
+soundsensor: true # true to enable the sound sensor. false to use the app as just an on-off switch
 ```
 
 `automations.yaml` on the Home Assistant server
