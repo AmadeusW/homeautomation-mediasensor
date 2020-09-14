@@ -15,7 +15,7 @@
                     Margin="5 0 0 0" 
                     DockPanel.Dock="Right" 
                     Width="60"
-                    Padding="4 1" Click="OverrideButton_Click">
+                    Padding="4 1" Click="OnOverrideButtonClick">
             Toggle
         </Button>
         <StackPanel>
