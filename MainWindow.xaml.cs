@@ -13,11 +13,6 @@ namespace MediaSensor
         private ConfigurationReader Configuration { get; }
         private Sensor Sensor { get; }
 
-        private bool ShowMediaState { get; set; }
-        private WindowState LastWindowState { get; set; }
-        private bool CanToggleOnRestore { get; set; }
-        private static TimeSpan ToggleOnRestoreDelay { get; } = TimeSpan.FromSeconds(10);
-
         public MainWindow()
         {
             InitializeComponent();
@@ -26,6 +21,9 @@ namespace MediaSensor
             var apiEndpoint = new ApiEndpoint(this.Sensor, this.Configuration);
             this.Core = new Core(this.Configuration, apiEndpoint, this.Sensor);
             this.Core.StateUpdated += OnStateUpdated;
+            Application.Current.SessionEnding += OnSessionEnding;
+            this.Closing += OnWindowClosing;
+            this.PreviewKeyDown += OnPreviewKeyDown;
 
             Task.Run(async () =>
             {
@@ -49,40 +47,13 @@ namespace MediaSensor
                 throw new InvalidOperationException($"Please update {ConfigurationReader.ConfigurationFileName}");
             }
 
-            ShowMediaState = this.Configuration.SoundSensor;
-
             await this.Core.InitializeAsync();
             await this.Core.UpdateEndpointAsync();
-
-            this.StateChanged += OnStateChanged;
-            this.CanToggleOnRestore = true;
         }
 
-        private void OnStateChanged(object? sender, EventArgs e)
-        {
-            if (this.LastWindowState == WindowState.Minimized
-                && this.WindowState != WindowState.Minimized)
-            {
-                OnWindowRestored();
-            }
-            this.LastWindowState = this.WindowState;
-        }
-
-        private void OnWindowRestored()
-        {
-            if (this.Configuration.ToggleOnRestore && this.CanToggleOnRestore)
-            {
-                RunAsyncSafely(async () =>
-                {
-                    this.CanToggleOnRestore = false;
-                    await this.Core.ToggleOverrideAsync();
-                    _ = this.Dispatcher.BeginInvoke((Action)(async () => await this.AnimateAndMinimize()));
-                    await Task.Delay(ToggleOnRestoreDelay);
-                    this.CanToggleOnRestore = true;
-                });
-            }
-        }
-
+        /// <summary>
+        /// Reacts to new state by updating the UI
+        /// </summary>
         private void OnStateUpdated(object? sender, UpdateArgs e)
         {
             if (e.Exception == null)
@@ -91,6 +62,10 @@ namespace MediaSensor
                 HandleException(e.Exception);
         }
 
+        /// <summary>
+        /// Updates the text labels in the UI. This method may be called from any thread.
+        /// </summary>
+        /// <param name="args"><see cref="UpdateArgs"/> which contain the updated state.</param>
         private void UpdateUi(UpdateArgs args)
         {
             if (System.Windows.Threading.Dispatcher.CurrentDispatcher != this.Dispatcher)
@@ -115,33 +90,72 @@ namespace MediaSensor
                 _ => "Switch: error",
             };
 
-            this.StatusText.Visibility = this.ShowMediaState ? Visibility.Visible : Visibility.Collapsed;
+            this.StatusText.Visibility = this.Configuration.SoundSensor 
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
-        private void OverrideButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Handle keyboard gestures, whether the button is focused or not
+        /// </summary>
+        private void OnPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case System.Windows.Input.Key.Space:
+                    // Space toggles the button
+                    RunAsyncSafely(async () => await this.Core.ToggleOverrideAsync());
+                    e.Handled = true;
+                    break;
+
+                case System.Windows.Input.Key.Enter:
+                    // Enter toggles the button and minimizes
+                    RunAsyncSafely(async () => await this.Core.ToggleOverrideAsync());
+                    this.WindowState = WindowState.Minimized;
+                    e.Handled = true;
+                    break;
+
+                case System.Windows.Input.Key.Escape:
+                    // Escape minimizes
+                    e.Handled = true;
+                    this.WindowState = WindowState.Minimized;
+                    break;
+
+                default:
+                    e.Handled = false;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Handle mouse gesture for the button
+        /// </summary>
+        private void OnOverrideButtonClick(object sender, RoutedEventArgs e)
         {
             RunAsyncSafely(async () => await this.Core.ToggleOverrideAsync());
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        /// <summary>
+        /// Turn off the light after delay when user closes the app
+        /// </summary>
+        private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             RunAsyncSafely(async () => await this.Core.ShutdownAsync())
                 .Wait();
         }
 
-        private async Task AnimateAndMinimize()
+        /// <summary>
+        /// Turn off the light after delay when OS closes the app
+        /// </summary>
+        private void OnSessionEnding(object sender, SessionEndingCancelEventArgs e)
         {
-            var textToRestore = this.OverridingText.Text;
-            this.OverridingText.Text = "Gotcha!  ";
-            await Task.Delay(300).ConfigureAwait(true);
-            this.OverridingText.Text = "Gotcha!! ";
-            await Task.Delay(300).ConfigureAwait(true);
-            this.OverridingText.Text = "Gotcha!!!";
-            await Task.Delay(300).ConfigureAwait(true);
-            this.OverridingText.Text = textToRestore;
-            this.WindowState = WindowState.Minimized;
+            RunAsyncSafely(async () => await this.Core.ShutdownAsync())
+                .Wait();
         }
 
+        /// <summary>
+        /// Dispatches async method to run. Returns immediately. Handles exceptions.
+        /// </summary>
         private Task RunAsyncSafely(Func<Task> action)
         {
             return Task.Run(async () =>
@@ -157,6 +171,9 @@ namespace MediaSensor
             });
         }
 
+        /// <summary>
+        /// Handle exception by permanently disabling the sensor and displaying the message.
+        /// </summary>
         private void HandleException(Exception ex)
         {
             // Immediately stop further updates
